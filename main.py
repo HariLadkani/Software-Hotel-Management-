@@ -160,6 +160,21 @@ def food():
         except stripe.error.StripeError as e:
             return jsonify({"error": str(e)}), 400
 
+        @app.route('/confirm-payment', methods=['POST'])
+    def confirm_payment():
+        data = request.get_json()
+    
+        try:
+            # Confirm the PaymentIntent with the provided token
+            stripe.PaymentIntent.confirm(data['paymentIntentId'], data['token'])
+    
+            # Process successful payment: update database, send emails, etc.
+            return jsonify({'status': 'success'})
+    
+        except stripe.error.StripeError as e:
+            return jsonify({'error': str(e)}), 400
+
+
         # Email set up
         msg = Message("PassTrack Food Order Confirmation", sender='passtrackservices@gmail.com',
                       recipients=[email])
