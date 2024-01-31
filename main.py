@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, redirect, flash
 from flask_mysqldb import MySQL
 from flask_mail import Mail, Message
 from datetime import *
+import stripe
+
+stripe.api_key = "your_stripe_secret_key"  # Replace with your actual secret key
+
 
 
 app=Flask(__name__)
@@ -141,6 +145,20 @@ def food():
         total += tax
         tax = "{:.2f}".format(tax)
         total = "{:.2f}".format(total)
+
+        try:
+            # Create PaymentIntent on the server-side
+            intent = stripe.PaymentIntent.create(
+                amount=int(total * 100),  # Convert to cents
+                currency="usd",
+                description="Food Order",
+            )
+
+            # Pass the client secret to the client-side for confirmation
+            return jsonify({"clientSecret": intent.client_secret})
+
+        except stripe.error.StripeError as e:
+            return jsonify({"error": str(e)}), 400
 
         # Email set up
         msg = Message("PassTrack Food Order Confirmation", sender='passtrackservices@gmail.com',
